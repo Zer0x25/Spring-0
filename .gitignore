@@ -1,0 +1,28 @@
+# Secretos y configuración local
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Salidas comunes de compilación y pruebas
+build/
+dist/
+out/
+target/
+coverage/
+.cache/
+.pytest_cache/
+
+# Dependencias locales habituales (conservar o ajustar según el perfil elegido)
+node_modules/
+.venv/
+venv/
+
+# Sistema operativo e IDEs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json

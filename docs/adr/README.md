@@ -17,7 +17,7 @@ Corolario: ningún ADR prevalece sobre instrucciones del anfitrión ni del usuar
 | 0000–0006 | Molde | Decisiones de gobernanza del flujo agéntico (este repositorio) |
 | 0002 | Proyecto derivado | Arquitectura base del producto (reservado) |
 | 0007+ | Proyecto derivado | Decisiones reales de producto |
-| — | — | Las seeds (`specs/seed-*.md`) son mantenimiento del **molde** y **NO consumen números de ADR** |
+| — | — | La evolución del molde se gobierna en Constructor-Padre y NO consume números de ADR |
 
 ## Qué decide cada ADR
 

@@ -30,7 +30,7 @@ El usuario confirma PRD, arquitectura, DoD y delegación. El agente genera los a
 
 Los ADR aceptados se conservan. [ADR 0006](docs/adr/0006-gobernanza-verificable.md) aclara precedencia y operación: nuevas instrucciones autorizadas pueden cambiar decisiones mediante registro nuevo, respetando las reglas del anfitrión. Los documentos históricos no tienen autoridad superior al usuario.
 
-**ADR del molde vs. del proyecto:** los ADR `0000–0006` son decisiones **del molde** (gobernanza del flujo agéntico) y sirven de **ejemplo/guía**. Los ADR del **proyecto derivado** nacen en Hito 1+: `0002` (arquitectura base) y `0007+` (decisiones reales de producto). Las **seeds** (`specs/seed-*.md`) son unidades de **mantenimiento del molde**; los derivados las heredan como referencia y no generan seeds.
+**ADR del molde vs. del proyecto:** los ADR `0000–0006` son decisiones **del molde** (gobernanza del flujo agéntico) y sirven de **ejemplo/guía**. Los ADR del **proyecto derivado** nacen en Hito 1+: `0002` (arquitectura base) y `0007+` (decisiones reales de producto). La evolución del molde se gobierna en Constructor-Padre; los derivados no la tocan.
 
 **Gobernanza ejecutable (Seed 009, V4.1):** en `phase=project` el gate aplica scope-lock mecánico (cambios fuera de «Archivos autorizados» de la unidad activa bloquean el commit) y evidencia por criterio en unidades Cerradas. Fallo seguro ante lo no parseable: advierte y omite, nunca bloquea por no entender.
 
@@ -83,7 +83,7 @@ Guía de actualización de derivados: comparar versiones, preservar personalizac
 - `.agents/bootstrap.md`, plantillas de PRD/prompt y perfil: inicialización.
 - `specs/templates/feature.template.md`: plantilla adaptable; el derivado genera `feature.md`.
 - `docs/adr/0000–0006`: historia de gobernanza; 0002 reservado al producto.
-- `specs/seed-*.md`: alcance y evidencia de mantenimiento.
+- `docs/history/seed-001-007.md`: historia conservada del molde.
 - `scripts/verify.sh`, `verify-structure.sh`, `tests/`: cierre y regresiones.
 - `.github/workflows/verify.yml`, `.githooks/pre-commit`: invocan el gate.
 

@@ -74,7 +74,7 @@ grep -q 'pendiente de sellado' resumed-initialization.log
 # Seal only after success. Keep a pending checkpoint until the final gate passes.
 mv .agents/bootstrap.md .agents/bootstrap.md.done
 sed -i 's/^phase=initializing$/phase=project/' .agents/project-profile.conf
-sed -i '/^## Estado inicial: semilla Hito 0$/,/^## Reglas de gobernanza$/{ /^## Reglas de gobernanza$/!d; }' AGENTS.md
+sed -i '/^## Estado inicial$/,/^## Reglas de gobernanza$/{ /^## Reglas de gobernanza$/!d; }' AGENTS.md
 printf '\nHito 0 sellado; Hito 1 preparado. Siguiente: PILOT-001.\n' >> STATE.md
 ./scripts/verify.sh > seal.log
 

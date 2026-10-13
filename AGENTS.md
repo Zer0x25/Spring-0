@@ -2,7 +2,7 @@
 
 **Spring-0** (antes Hito 0) proporciona un núcleo de **Spec-Driven Development (SDD)**, **Architecture Decision Records (ADR)**, **BDD**, **TDD** y **Quality Gates**, con alcance en PRD y cierre por DoD. La arquitectura concreta se define por proyecto en `docs/adr/0002-arquitectura-base.md` y se resume en `.agents/project-profile.conf`. Este repo es el molde que provee gobernanza a derivados; su construcción vive en Constructor-Padre.
 
-## Estado inicial: semilla Hito 0
+## Estado inicial
 
 Cuando el usuario pida iniciar un proyecto con `phase=seed`, lee `.agents/bootstrap.md`. Con `phase=initializing`, retoma el paso pendiente desde STATE y el bootstrap, preservando decisiones y archivos existentes; no reinicies la entrevista. Para revisar o mantener esta plantilla, no inicies la entrevista; sigue la unidad de mantenimiento aprobada según su nivel. Usa una spec salvo que la política confirmada autorice un registro ligero para una corrección Tier 3.
 

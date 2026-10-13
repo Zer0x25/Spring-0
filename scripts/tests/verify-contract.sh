@@ -14,7 +14,7 @@ make_seed_fixture() {
     docs/adr/0000-template.md docs/adr/0001-perfiles-y-aplicabilidad.md docs/adr/0003-autonomia-y-continuidad.md \
     docs/adr/0004-producto-comportamiento-y-cierre.md docs/adr/0005-gobernanza-proporcional-al-riesgo.md \
     docs/adr/0006-gobernanza-verificable.md specs/templates/feature.template.md .env.example \
-    docs/agent-capabilities.md docs/seed-upgrades.md .github/workflows/verify.yml; do
+    docs/agent-capabilities.md .github/workflows/verify.yml; do
     printf '# Fixture: %s\nContenido deliberado del contrato.\n' "$file" > "$dir/$file"
   done
   cp "$REPO_ROOT/scripts/verify.sh" "$dir/scripts/verify.sh"

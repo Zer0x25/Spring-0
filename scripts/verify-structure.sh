@@ -27,7 +27,7 @@ for file in AGENTS.md README.md STATE.md \
   docs/adr/0000-adopcion-gobernanza-agentica.md docs/adr/0001-perfiles-y-aplicabilidad.md \
   docs/adr/0003-autonomia-y-continuidad.md docs/adr/0004-producto-comportamiento-y-cierre.md \
   docs/adr/0005-gobernanza-proporcional-al-riesgo.md docs/adr/0006-gobernanza-verificable.md \
-  docs/agent-capabilities.md docs/seed-upgrades.md \
+  docs/agent-capabilities.md \
   scripts/verify.sh scripts/verify-structure.sh scripts/install-hooks.sh \
   scripts/tests/verify-contract.sh scripts/tests/bootstrap-pilot.sh .githooks/pre-commit; do
   require_content "$file"

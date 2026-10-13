@@ -76,7 +76,7 @@ Los campos críticos pendientes usan `HITO0_PENDING` hasta resolverlos. La detec
 - [Catálogo de stacks](.agents/stack-presets.md): VPS, Cloudflare, Cloud Run y personalizado. Justificar componentes y verificar documentación actual antes de fijar versiones, compatibilidad o costos.
 - Persistencia: primero decidir si hace falta. Si no, omitirla; si hace falta, comparar SQLite/PostgreSQL cuando correspondan u otra alternativa justificada.
 - [Perfil offline-first](docs/architecture-profiles/full-stack-offline-first.md): referencia propuesta para escritura offline y sincronización. No implementada ni certificada por esta semilla; no impone monorepo ni dominio de asistencia.
-- [Guía de actualización de derivados](docs/seed-upgrades.md): comparar versiones, preservar personalizaciones, confirmar adopción y probar en copia.
+Guía de actualización de derivados: comparar versiones, preservar personalizaciones, confirmar adopción y probar en copia (convención; el catálogo histórico de upgrades vive en el Constructor-Padre).
 
 ## Archivos del molde
 

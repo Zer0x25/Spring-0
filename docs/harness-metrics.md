@@ -35,7 +35,7 @@
 - **Evidencia:** `scripts/verify-structure.sh` líneas 48-52; `docs/learning.md` del derivado (entrada 2026-10-11); STATE.md del derivado (pendientes en STATE, no en archivos gateados).
 - **Severidad:** media — workaround en cada derivado con pendientes reales.
 - **Candidata a seed:** sí — alinear el gate con la política de HITO0_PENDING (permitir el marcador en archivos aprobados durante initializing/project).
-- **Estado: CERRADA (Seed 012, V5.2, 2026-10-12).** El gate ahora cuenta los `HITO0_PENDING` y advierte por fase (initializing advierte; project advierte + exige registro en STATE o falla; seed no corre); los demás placeholders siguen bloqueando. El workaround ya no es necesario. Evidencia del cierre: `specs/seed-012-gate-pendientes.md`, contrato 94/94, gate raíz exit 0.
+- **Estado: CERRADA (Seed 012, V5.2, 2026-10-12).** El gate ahora cuenta los `HITO0_PENDING` y advierte por fase (initializing advierte; project advierte + exige registro en STATE o falla; seed no corre); los demás placeholders siguen bloqueando. El workaround ya no es necesario. Evidencia del cierre: contrato 94/94, gate raíz exit 0 (spec conservada en el Constructor-Padre).
 
 #### [F-02] Unidades "pendiente de revisión humana" sin mecanismo de cierre explícito
 
@@ -65,7 +65,7 @@
 - **Evidencia:** `specs/003-planes-pagos-caja.md` L23 («UI (se hace después, en la pasada de diseño)»); el ciclo de AGENTS §8 dice «siguiente unidad» sin decir cómo prepararla; ADR-0002 del derivado YA blindó separación UI/lógica (L28/L43/L50) pero no hay unidad de system design de frontend en la secuencia.
 - **Severidad:** media/alta — detuvo el proyecto real y puede costar una reescritura del frontend.
 - **Candidata a seed:** sí — protocolo de preparación de capa (ADR de system design antes de tocar UI).
-- **Estado: CERRADA (Seed 013, V5.3, 2026-10-12).** AGENTS y PROMPT-MAESTRO ganan la sección «Preparación de la siguiente unidad / capa»: si la unidad toca una capa nueva sin ADR de system design, el agente lo escribe, lo valida con el humano (propone/valida) y recién implementa; la lógica de negocio y autorización quedan SOLO en backend; el ADR es reutilizable entre módulos. Plantilla `docs/templates/adr-frontend.md` + campo `Decisión de diseño previa:` en la spec. Evidencia del cierre: `specs/seed-013-preparacion-capa.md`, contrato 94/94, gate raíz exit 0.
+- **Estado: CERRADA (Seed 013, V5.3, 2026-10-12).** AGENTS y PROMPT-MAESTRO ganan la sección «Preparación de la siguiente unidad / capa»: si la unidad toca una capa nueva sin ADR de system design, el agente lo escribe, lo valida con el humano (propone/valida) y recién implementa; la lógica de negocio y autorización quedan SOLO en backend; el ADR es reutilizable entre módulos. Plantilla `docs/templates/adr-frontend.md` + campo `Decisión de diseño previa:` en la spec. Evidencia del cierre: contrato 94/94, gate raíz exit 0 (spec conservada en el Constructor-Padre).
 
 ### Señales de que el flujo funciona
 
@@ -83,7 +83,7 @@
 - **Evidencia:** `scripts/verify-scope.sh` líneas 50-55 (antes del fix) — violación incondicional por falta de spec; la auditoría del flujo lo detectó y el contrato rojo lo confirmó (BDD-1 RED pre-fix).
 - **Severidad:** alta — el gate contradice la política que debe hacer cumplir; cualquier unidad ligera real quedaba bloqueada.
 - **Candidata a seed:** sí — reconocer `LIG-*` y verificar el alcance contra las rutas del bloque de STATE (fail-safe).
-- **Estado: CERRADA (Seed 014, V5.4, 2026-10-12).** `verify-scope.sh` reconoce `LIG-*`: lee sus rutas de `Alcance/autoridad:` en STATE (partiendo por `,` y `;`, descartando autor/fecha) y verifica contra ellas; ruta fuera de la lista sigue siendo SCOPE VIOLATION; una unidad de negocio sin spec ni bloque LIG sigue siendo violación; bloque no parseable → fail-safe (advierte, no bloquea). Contrato 94→97 (BDD-1/2/3). Evidencia del cierre: `specs/seed-014-robustez-base.md`, contrato 97/97, gate raíz exit 0, ADR 0000–0006 intactos.
+- **Estado: CERRADA (Seed 014, V5.4, 2026-10-12).** `verify-scope.sh` reconoce `LIG-*`: lee sus rutas de `Alcance/autoridad:` en STATE (partiendo por `,` y `;`, descartando autor/fecha) y verifica contra ellas; ruta fuera de la lista sigue siendo SCOPE VIOLATION; una unidad de negocio sin spec ni bloque LIG sigue siendo violación; bloque no parseable → fail-safe (advierte, no bloquea). Contrato 94→97 (BDD-1/2/3). Evidencia del cierre: contrato 97/97, gate raíz exit 0, ADR 0000–0006 intactos (spec conservada en el Constructor-Padre).
 
 #### [F-05] Decisiones transversales no ordenadas antes de tocar un dominio
 
@@ -91,4 +91,4 @@
 - **Evidencia:** `docs/learning.md` del derivado (colisiones de TRUNCATE); ADR-0002 del derivado blindó separación UI/lógica y authz en backend pero no declaró modelo de errores ni estrategia de tests.
 - **Severidad:** media/alta — improvisar por módulo obliga a reescribir.
 - **Candidata a seed:** sí — declarar las tres transversales obligatorias en el ADR base antes de tocar un dominio.
-- **Estado: CERRADA (Seed 014, V5.4, 2026-10-12).** AGENTS §7 gana «Decisiones transversales obligatorias antes de tocar un dominio» (una vez por dominio, validadas por el humano, reutilizadas por los módulos siguientes, sin ceremonia si ya están) y PROMPT-MAESTRO lo referencia. El gate no cambia ni lee ADRs de dominio. Evidencia del cierre: AGENTS.md, `.agents/master-prompt.template.md`, `specs/seed-014-robustez-base.md`.
+- **Estado: CERRADA (Seed 014, V5.4, 2026-10-12).** AGENTS §7 gana «Decisiones transversales obligatorias antes de tocar un dominio» (una vez por dominio, validadas por el humano, reutilizadas por los módulos siguientes, sin ceremonia si ya están) y PROMPT-MAESTRO lo referencia. El gate no cambia ni lee ADRs de dominio. Evidencia del cierre: AGENTS.md, `.agents/master-prompt.template.md` (spec conservada en el Constructor-Padre).

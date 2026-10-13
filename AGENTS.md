@@ -1,6 +1,6 @@
 # Protocolo Operativo para Agentes de Software
 
-**Spring-0** (antes Hito 0) proporciona un núcleo de **Spec-Driven Development (SDD)**, **Architecture Decision Records (ADR)**, **BDD**, **TDD** y **Quality Gates**, con alcance en PRD y cierre por DoD. La arquitectura concreta se define por proyecto en `docs/adr/0002-arquitectura-base.md` y se resume en `.agents/project-profile.conf`. Este repo es el molde que provee gobernanza a derivados; su construcción vive en Constructor-Padre.
+**Spring-0** proporciona un núcleo de **Spec-Driven Development (SDD)**, **Architecture Decision Records (ADR)**, **BDD**, **TDD** y **Quality Gates**, con alcance en PRD y cierre por DoD. La arquitectura concreta se define por proyecto en `docs/adr/0002-arquitectura-base.md` y se resume en `.agents/project-profile.conf`. Este repo es el molde que provee gobernanza a derivados; su construcción vive en Constructor-Padre.
 
 ## Estado inicial
 

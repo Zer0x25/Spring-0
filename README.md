@@ -1,6 +1,6 @@
 # Spring-0 — Semilla agnóstica para proyectos guiados por agentes
 
-> **Spring-0** es el molde de gobernanza agéntica (antes Hito-0), migrado a repo fresco sin historial. Su construcción vive en [Constructor-Padre](https://github.com/Zer0x25/Constructor-Padre); este repo es el molde que provee gobernanza a los derivados. Versión funcional: **V5.6** (estado migrado desde Hito-0 `0e683dd`).
+> **Spring-0** es el molde de gobernanza agéntica. Su construcción vive en [Constructor-Padre](https://github.com/Zer0x25/Constructor-Padre); este repo es el molde que provee gobernanza a los derivados.
 
 Plantilla para acordar producto, arquitectura, autoridad y evidencia antes de desarrollar. No impone stack ni dominio. El núcleo es PRD, specs proporcionadas al riesgo, ADR históricos y un gate reproducible.
 

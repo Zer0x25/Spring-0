@@ -105,6 +105,35 @@ for phase in unknown 'seed=project'; do
   printf 'phase=%s\n' "$phase" > "$seed/.agents/project-profile.conf"
   assert_gate 1 "$seed" 'invalid phase' phase
 done
+
+# --- phase=mold: the mold governs itself as father, not as a derived product ---
+make_mold() {
+  local dir="$1"
+  make_seed_fixture "$dir"
+  printf 'phase=mold\n' > "$dir/.agents/project-profile.conf"
+}
+mold="$TEMP_ROOT/mold"
+make_mold "$mold"
+# mold requires the mold files (not product files): verify-project.sh must NOT exist.
+assert_gate 0 "$mold" 'mold passes without product verifier' 'Integridad documental: mold'
+rm "$mold/scripts/verify-project.sh" 2>/dev/null || true
+assert_gate 0 "$mold" 'mold does not run product verifier' 'Integridad documental: mold'
+# mold runs the contract tests but NOT the pilot (pilot is the seed lifecycle rehearsal).
+assert_gate 0 "$mold" 'mold runs contract tests' CONTRACT_REACHED
+# mold must NOT require any product metadata key; a bare phase=mold profile is complete.
+printf 'phase=mold\n' > "$mold/.agents/project-profile.conf"
+assert_gate 0 "$mold" 'mold needs no product keys' 'Integridad documental: mold'
+# mold must NOT run scope-lock (the mold is not a product unit under lock).
+make_mold "$mold"
+cp "$REPO_ROOT/scripts/verify-scope.sh" "$mold/scripts/verify-scope.sh" 2>/dev/null || true
+printf '#!/usr/bin/env bash\nexit 9\n' > "$mold/scripts/verify-scope.sh"
+chmod +x "$mold/scripts/verify-scope.sh"
+assert_gate 0 "$mold" 'mold skips scope-lock' 'Integridad documental: mold'
+# a missing mold governance file still blocks (mold is not a free pass).
+make_mold "$mold"
+rm "$mold/docs/adr/0006-gobernanza-verificable.md"
+assert_gate 1 "$mold" 'mold missing governance file blocks' 'docs/adr/0006-gobernanza-verificable.md'
+
 printf 'phase=seed\nphase=seed\n' > "$seed/.agents/project-profile.conf"
 assert_gate 1 "$seed" 'duplicate phase' phase
 rm "$seed/.agents/project-profile.conf"

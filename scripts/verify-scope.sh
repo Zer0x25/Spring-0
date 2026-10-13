@@ -21,6 +21,7 @@ evidence_missing() { printf 'EVIDENCIA FALTANTE: %s\n' "$1" >&2; exit 1; }
 phase="$(awk -F= '$1 == "phase" { print substr($0, index($0, "=")+1) }' "$PROFILE_FILE" 2>/dev/null | tr -d '[:space:]')"
 case "$phase" in
   seed) exit 0 ;;
+  mold) exit 0 ;;
   initializing) MODE=warn ;;
   project) MODE=check ;;
   "") violation "no se puede leer la fase en $PROFILE_FILE." ;;

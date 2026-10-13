@@ -13,6 +13,10 @@ PHASE="$(awk -F= '$1 == "phase" { print substr($0, index($0, "=")+1) }' .agents/
 if [[ "$PHASE" == seed ]]; then
   bash scripts/tests/bootstrap-pilot.sh
   printf 'Gate de semilla completo. No certifica una aplicación de producto.\n'
+elif [[ "$PHASE" == mold ]]; then
+  # The mold is the father, not a derived product: contract runs, but the pilot
+  # (seed lifecycle rehearsal) and the product verifier do not apply.
+  printf 'Gate del molde superado. No certifica una aplicación de producto.\n'
 else
   # Mechanical scope-lock + per-criterion evidence: warns in initializing, blocks in project.
   if [[ "$PHASE" == project ]]; then

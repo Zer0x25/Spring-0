@@ -20,7 +20,7 @@ profile_value() {
 require_content "$PROFILE_FILE"
 PHASE="$(profile_value phase)"
 PENDING_TOTAL=0
-case "$PHASE" in seed|initializing|project) ;; *) fail "phase desconocida '$PHASE'; usa seed, initializing o project." ;; esac
+case "$PHASE" in seed|mold) ;; initializing|project) ;; *) fail "phase desconocida '$PHASE'; usa seed, mold, initializing o project." ;; esac
 
 # Common governance and tools remain required in derived projects.
 for file in AGENTS.md README.md STATE.md \
@@ -38,6 +38,15 @@ if [[ "$PHASE" == seed ]]; then
     .env.example .github/workflows/verify.yml; do
     require_content "$file"
   done
+elif [[ "$PHASE" == mold ]]; then
+  # The mold governs itself as father: it requires the mold files (same governance
+  # and templates as seed) but no product artifacts (no PRD, ADR-0002, verifier).
+  for file in .agents/bootstrap.md .agents/stack-presets.md .agents/master-prompt.template.md \
+    .agents/prd.template.md docs/adr/0000-template.md specs/templates/feature.template.md \
+    .env.example .github/workflows/verify.yml; do
+    require_content "$file"
+  done
+  printf 'El molde se gobierna a si mismo como padre; no corre scope-lock ni verificador de producto.\n' >&2
 else
   for key in application_kind surfaces language runtime framework persistence ci_platform; do
     profile_value "$key" >/dev/null

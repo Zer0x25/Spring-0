@@ -1,6 +1,6 @@
 # Estado del Proyecto: Semilla Spring-0
 
-- Fase: `seed`; molde de gobernanza agéntica (antes Hito-0), sin stack ni producto seleccionado.
+- Fase: `mold`; molde de gobernanza agéntica que se gobierna a sí mismo como padre (no es un derivado). Sin stack ni producto seleccionado; no corre scope-lock ni verificador de producto.
 - Versión funcional: **V5.6** — estado migrado 1:1 desde Hito-0 (`0e683dd`, tag `v5.6.0`) a este repo fresco sin historial, el 2026-10-12.
 - Construcción: gobernada desde [Constructor-Padre](https://github.com/Zer0x25/Constructor-Padre); este repo es el molde que provee gobernanza a derivados, no se construye a sí mismo.
 - Base del molde: specs históricas conservadas en el Constructor-Padre (unidades de construcción del molde); este repo expone solo el molde a derivados.

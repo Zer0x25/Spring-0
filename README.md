@@ -1,6 +1,8 @@
 # Spring-0 — Semilla agnóstica para proyectos guiados por agentes
 
 > **Spring-0** es el molde de gobernanza agéntica. Su construcción vive en [Constructor-Padre](https://github.com/Zer0x25/Constructor-Padre); este repo es el molde que provee gobernanza a los derivados.
+>
+> Este repo corre en `phase=mold`: se gobierna a sí mismo como padre, corre el contrato del gate pero no el piloto (ensayo del ciclo de vida `seed`) ni el verificador de producto ni scope-lock. Los derivados que se generen desde aquí corren en `seed` → `initializing` → `project`.
 
 Plantilla para acordar producto, arquitectura, autoridad y evidencia antes de desarrollar. No impone stack ni dominio. El núcleo es PRD, specs proporcionadas al riesgo, ADR históricos y un gate reproducible.
 

@@ -1,6 +1,7 @@
 # Spec: [Resultado verificable]
 
 > Estado: Borrador | Aprobada | Implementada | Cerrada
+> Base de alcance: [SHA completo de inicio de esta unidad]
 > Nivel: Tier 2 — Estándar | Tier 1 — Riesgo alto | Tier 3 con spec si no se autoriza registro ligero; justificación: [efecto, contrato y riesgo]
 > Requisitos: [IDs de PRD.md o mantenimiento de semilla]
 > ADR aplicables: [Rutas o ninguno]
@@ -49,6 +50,8 @@ Para cambios técnicos sin comportamiento de usuario, elimina el ejemplo Gherkin
 - **Editables:** [Rutas exactas o patrón acotado; incluir spec, STATE y aprendizaje si se actualizan]
 - **Protegidos:** [Rutas o límites]
 
+Registra el SHA completo de `git rev-parse HEAD` al iniciar la unidad, antes de sus cambios. La base debe ser ancestro de HEAD y se conserva durante toda la unidad; cambiarla requiere una decisión autorizada que explique el trabajo previo. La base permite varias unidades consecutivas sin push. La revisión acumulada de la rama se hace aparte con `git diff origin/main...HEAD`; no amplíes las rutas de la unidad para incluir trabajo anterior.
+
 Actualiza la spec antes de ampliar archivos; no cambia por sí misma arquitectura ni permisos de dependencias.
 
 ## 5. Verificación y DoD
@@ -61,7 +64,10 @@ Actualiza la spec antes de ampliar archivos; no cambia por sí misma arquitectur
 
 ## 6. Cierre y continuidad
 
-- **Evidencia:** [Criterios, comandos y resultados reales; verificaciones requeridas pendientes impiden cierre]
+- **Evidencia:** [Una declaración por CA; verificaciones requeridas pendientes impiden cierre]
+
+Para cerrar, añade por criterio una línea con el formato `- Evidencia CA-1: verificacion=comando o revisión concreta; resultado=pass; artefacto=ruta/relativa; sha256=huella`. Calcula la huella con `sha256sum ruta/relativa` después de verificar el resultado. Usa un script cuando el comando contenga `;`, delimitador del registro. El artefacto debe existir dentro del repo y representar lo probado (código, documento, informe u otra salida pertinente). El gate comprueba declaración y contenido vigente; no prueba la ejecución ni sustituye los controles de la DoD. Una mención del CA o una frase «pendiente» no es evidencia. No añadas declaraciones para verificaciones pendientes.
+
 - **Aprendizaje:** [Hallazgo con evidencia en docs/learning.md o sin hallazgos nuevos; semilla puede registrarlo aquí]
 - **Commit:** [Política, mensaje y resultado; requerido pendiente impide cierre]
 - **Checkpoint en STATE:** [Cobertura del PRD, siguiente paso y bloqueos con contador/hipótesis si existen]

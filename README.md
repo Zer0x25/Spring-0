@@ -8,9 +8,19 @@ Plantilla para acordar producto, arquitectura, autoridad y evidencia antes de de
 
 ## Crear un proyecto
 
-1. En GitHub usa **Use this template**, clona el repositorio y ábrelo con tu agente.
-2. Activa el hook: `./scripts/install-hooks.sh`.
-3. Escribe `Inicia Hito 0`.
+Prepara una copia desde un checkout de Spring-0 (también disponible como submódulo del constructor):
+
+```sh
+./scripts/prepare-derivative.sh /ruta/nuevo-proyecto
+cd /ruta/nuevo-proyecto
+./scripts/install-hooks.sh
+```
+
+La carpeta padre debe existir y el destino debe ser nuevo. Se exportan los archivos versionados del checkout y el preparador, sin su historial Git ni archivos locales ajenos. La copia nace con Git independiente, sin commits, `phase=seed`, STATE limpio y procedencia en `.agents/mold-origin.conf`. Esa procedencia incluye el commit de la copia fuente y una huella del contenido exportado; los cambios locales pueden hacer que difiera del commit.
+
+Repetir el comando sobre un derivado preparado conserva sus archivos, incluso si está en `initializing` o `project`; no actualiza ni reinicia el proyecto. El molde y las carpetas ajenas se rechazan como destino. Una copia hecha con **Use this template** conserva `phase=mold`: usa el preparador hacia otra carpeta nueva antes de iniciar el producto.
+
+Abre el nuevo proyecto con tu agente y escribe **Inicia Hito 0**.
 
 La entrevista adapta hasta dos preguntas por turno al contexto ya disponible. Distingue decisiones, supuestos y pendientes; omite áreas irrelevantes. El bootstrap comprueba el remoto para advertir si se intenta inicializar el molde maestro; es un control procedimental del agente, no un bloqueo de Git.
 
@@ -34,9 +44,9 @@ Los ADR aceptados se conservan. [ADR 0006](docs/adr/0006-gobernanza-verificable.
 
 **ADR del molde vs. del proyecto:** los ADR `0000–0006` son decisiones **del molde** (gobernanza del flujo agéntico) y sirven de **ejemplo/guía**. Los ADR del **proyecto derivado** nacen en Hito 1+: `0002` (arquitectura base) y `0007+` (decisiones reales de producto). La evolución del molde se gobierna en Constructor-Padre; los derivados no la tocan.
 
-**Gobernanza ejecutable (Seed 009, V4.1):** en `phase=project` el gate aplica scope-lock mecánico (cambios fuera de «Archivos autorizados» de la unidad activa bloquean el commit) y evidencia por criterio en unidades Cerradas. Fallo seguro ante lo no parseable: advierte y omite, nunca bloquea por no entender.
+**Gobernanza ejecutable (Seed 009, V4.1):** en `phase=project` el gate aplica scope-lock mecánico (cambios fuera de «Archivos autorizados» de la unidad activa bloquean el commit) y evidencia por criterio en unidades Cerradas. Datos no interpretables advierten y omiten con reporte de gobernanza incompleta; la salida 0 no acredita esos controles.
 
-**Arranque con Notion (Seed 010, V5):** el arranque de Hito 1 tiene dos modos. **Modo A (enriquecido):** el agente lee la página contenedora y la database de decisiones de Notion del proyecto y propone PRD/ADR/specs trasladando cada decisión con su estado (`Confirmada` → aceptada, `Pendiente` → `HITO0_PENDING`). **Modo B (desde cero):** entrevista estándar; al sellar, el agente crea la página y database en Notion con lo confirmado. Notion es *contexto* (el por qué), nunca fuente de verdad ejecutable; el gate no depende de Notion. Cada spec lleva `Contexto (Notion): <url>` y `Trazabilidad: SPEC:<id>`.
+**Arranque con Notion (Seed 010, V5):** el arranque de Hito 1 tiene dos modos. **Modo A (enriquecido):** el agente lee la página contenedora y la database de decisiones de Notion del proyecto y propone PRD/ADR/specs trasladando cada decisión con su estado (`Confirmada` → aceptada, `Pendiente` → `HITO0_PENDING:PEND-n` registrado en STATE). **Modo B (desde cero):** entrevista estándar; al sellar, el agente crea la página y database en Notion con lo confirmado. Notion es *contexto* (el por qué), nunca fuente de verdad ejecutable; el gate no depende de Notion. Cada spec lleva `Contexto (Notion): <url>` y `Trazabilidad: SPEC:<id>`.
 
 **Aprendizaje auditable (Seed 011, V5.1):** el molde institucionaliza tres mecanismos ligeros, sin código en el gate. (1) *Formato canónico de aprendizaje*: cada derivado lleva `docs/learning.md` (fecha, unidad, hallazgo, evidencia archivo:línea, aplicación futura, severidad). (2) *Auditoría del molde*: `docs/harness-metrics.md` vive en el molde; el supervisor registra ahí las fricciones al auditar un derivado. (3) *Ritual de cierre de sesión*: antes de cerrar una sesión con commits, exportá la conversación del harness a `docs/sessions/` y commiteala junto a la unidad. Es opt-in y sin hook; el gate nunca lee sesiones ni aprendizaje.
 
@@ -71,7 +81,7 @@ Es el mismo comando para cierre local, hook y CI. Ejecuta:
 
 `verify-structure.sh` es interno y no sustituye el cierre. El piloto usa decisiones simuladas y una CLI Bash; no prueba una entrevista real ni todos los stacks. Un gate verde no certifica por sí solo la semántica del PRD, autoridad real de documentos ni aceptación final del producto. E2E, seguridad, build y operación se acuerdan por proyecto en AGENTS y su verificador. CI debe preparar el runtime correspondiente.
 
-Los campos críticos pendientes usan `HITO0_PENDING` hasta resolverlos. La detección no rechaza enlaces Markdown ordinarios y permite placeholders en plantillas reutilizables de specs.
+Los campos pendientes usan `HITO0_PENDING:PEND-n` con registro exacto en STATE hasta resolverlos. La detección no rechaza enlaces Markdown ordinarios y permite placeholders en plantillas reutilizables de specs.
 
 ## Referencias opcionales
 
@@ -90,3 +100,11 @@ Guía de actualización de derivados: comparar versiones, preservar personalizac
 - `.github/workflows/verify.yml`, `.githooks/pre-commit`: invocan el gate.
 
 La semilla sigue siendo el molde. Para conocer evidencia y pendientes actuales, consulta [STATE](STATE.md).
+
+## Alcance, cierre y pendientes
+
+Cada unidad conserva su SHA de inicio en `Base de alcance`, independiente del último push. El alcance incluye index, trabajo local y archivos nuevos; la revisión acumulada de rama se mantiene aparte. Derivados anteriores usan fallback a `origin/main` con aviso de migración pendiente.
+
+El cierre requiere evidencia por CA con verificación, `resultado=pass`, artefacto relativo existente y huella SHA-256 vigente, incluso si no hay diff o base. El gate valida el registro y contenido; la ejecución real y suficiencia de las pruebas siguen siendo parte de la DoD. El reporte distingue controles verificados, omitidos y no aplicables; omisiones conservan exit 0 y producen gobernanza incompleta, sin acreditar cierre.
+
+Los campos sin resolver usan `HITO0_PENDING:PEND-n`. La tabla única de STATE tiene ID, impacto (`critico`/`diferible`), responsable, condición de resolución y estado (`abierto`/`resuelto`). Críticos abiertos impiden sellado/cierre; diferibles registrados advierten. Consulta AGENTS para el formato y migra marcadores antiguos antes de sellar.

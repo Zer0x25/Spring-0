@@ -13,13 +13,13 @@ Actúas como facilitador de arquitectura. Hito 0 define el propósito y las regl
 
 ## Fase 0: Protección de la plantilla
 
-Determina el remoto canónico de Git normalizando HTTPS y SSH. Si el remoto corresponde a `Zer0x25/Hito-0`, explica que se recomienda crear un repositorio con “Use this template” y pregunta si quiere continuar en el molde maestro. Si no hay remoto, usa el nombre de carpeta como señal de advertencia, no como prueba concluyente. Una respuesta afirmativa permite continuar.
+Determina el remoto canónico de Git normalizando HTTPS y SSH. Si el remoto corresponde a `Zer0x25/Spring-0` o al archivo histórico `Zer0x25/Hito-0`, indica que es el molde maestro y prepara el producto en un directorio nuevo mediante `scripts/prepare-derivative.sh <destino>`. No conviertas el molde en sitio. Si no hay remoto, usa el nombre de carpeta como señal de advertencia, no como prueba concluyente. El preparador conserva el molde y no inicia la entrevista.
 
 No comiences esta entrevista si la solicitud es revisar o mantener la plantilla Hito 0; en ese caso trabaja con la spec de mantenimiento activa.
 
 ## Fase 1: Integridad y fase
 
-Lee `.agents/project-profile.conf`. Con `phase=seed`, ejecuta `scripts/verify.sh` antes de comenzar. Con `phase=initializing`, lee el checkpoint y retoma generación/verificación sin repetir la entrevista ni sobreescribir archivos personalizados. Con `phase=project`, comprueba STATE antes de cualquier acción: no reinicialices un proyecto sellado. Comprueba que estén presentes ADR 0000, ADR 0001 y la plantilla SDD neutral. No crees carpetas de aplicación antes de escoger el perfil.
+Lee `.agents/project-profile.conf`. Con `phase=mold`, prepara un derivado en una carpeta nueva usando `scripts/prepare-derivative.sh <destino>`; continúa la entrevista únicamente dentro de la copia en `seed`. Con `phase=seed`, ejecuta `scripts/verify.sh` antes de comenzar. Con `phase=initializing`, lee el checkpoint y retoma generación/verificación sin repetir la entrevista ni sobreescribir archivos personalizados. Con `phase=project`, comprueba STATE antes de cualquier acción: no reinicialices un proyecto sellado. Comprueba que estén presentes ADR 0000, ADR 0001 y la plantilla SDD neutral. No crees carpetas de aplicación antes de escoger el perfil.
 
 ## Fase 2: Entrevista adaptativa
 
@@ -38,7 +38,7 @@ En cualquier caso, **el gate nunca depende de Notion**: si no hay capacidad de l
 
 ### Modo A — enriquecido (hay material en Notion y capacidad de leerlo)
 
-El humano indica *"Inicia Hito-1 leyendo `<url o id de Notion>`"*. Lee la página contenedora y la database de decisiones vía las tools MCP de Notion (`GET_PAGE_MARKDOWN`; para la database, `NOTION_FETCH_DATA`/query) en tu sesión — las tools MCP no se invocan desde shell. Traslada cada decisión con su estado: `Confirmada` → aceptada en el repo; `Pendiente` → `HITO0_PENDING`. No inventes contenido ausente ni promociones pendientes. La entrevista se vuelve *validación*: presenta la propuesta de PRD/ADR/specs derivada de Notion y el humano confirma o corrige. Si Notion no responde o no está compartido, advierte y continúa con entrevista estándar (fail-safe).
+El humano indica *"Inicia Hito-1 leyendo `<url o id de Notion>`"*. Lee la página contenedora y la database de decisiones vía las tools MCP de Notion (`GET_PAGE_MARKDOWN`; para la database, `NOTION_FETCH_DATA`/query) en tu sesión — las tools MCP no se invocan desde shell. Traslada cada decisión con su estado: `Confirmada` → aceptada en el repo; `Pendiente` → `HITO0_PENDING:PEND-n` con registro en STATE. No inventes contenido ausente ni promociones pendientes. La entrevista se vuelve *validación*: presenta la propuesta de PRD/ADR/specs derivada de Notion y el humano confirma o corrige. Si Notion no responde o no está compartido, advierte y continúa con entrevista estándar (fail-safe).
 
 ### Modo B — desde cero (no hay material en Notion)
 
@@ -89,9 +89,20 @@ Mantén hasta dos preguntas por turno. Confirma la elección antes de generar el
 
 No trates esta lista como formulario obligatorio. Marca lo irrelevante como `no_aplica`. Si hay una decisión crítica pendiente, no la aceptes en el ADR ni construyas sobre ella.
 
+## Registro de pendientes en STATE
+
+Usa una tabla única, por ejemplo (IDs y contenido ilustrativos):
+
+| ID | Impacto | Responsable | Condición de resolución | Estado |
+|---|---|---|---|---|
+| PEND-1 | critico | usuario | confirmar permisos del producto | abierto |
+| PEND-2 | diferible | usuario | elegir hosting antes de desplegar | abierto |
+
+Los campos vigentes referencian `HITO0_PENDING:PEND-1` o su ID correspondiente. Al resolver, actualiza el registro y retira el marcador; conserva el ID y su historial. No copies los ejemplos como decisiones reales. Sin pendientes no crees filas ficticias. Adopción en derivados anteriores: asigna IDs y clasifica pendientes con la autoridad vigente; no promociones pendientes a confirmados ni cambies un crítico a diferible para sellar.
+
 ## Fase 3: Confirmación y constitución
 
-Antes de crear artefactos, presenta un resumen breve con decisiones confirmadas, supuestos, asuntos pendientes y trade-offs. Incluye meta, criterios finales y límites de delegación. Confirma primero el PRD propuesto, la DoD y el umbral de falta de progreso; luego pide confirmar las decisiones arquitectónicas y la delegación del prompt maestro. Mantén hasta dos preguntas por turno. No cierres con alcance, aceptación o autoridad críticos pendientes. Tras confirmación, registra en STATE la inicialización pendiente y su primer paso. Usa `HITO0_PENDING` para cualquier campo crítico aún sin resolver; no lo retires sin resolverlo. Genera de forma repetible: antes de crear cada archivo, comprueba si existe y conserva personalizaciones. Procede así:
+Antes de crear artefactos, presenta un resumen breve con decisiones confirmadas, supuestos, asuntos pendientes y trade-offs. Incluye meta, criterios finales y límites de delegación. Confirma primero el PRD propuesto, la DoD y el umbral de falta de progreso; luego pide confirmar las decisiones arquitectónicas y la delegación del prompt maestro. Mantén hasta dos preguntas por turno. No cierres con alcance, aceptación o autoridad críticos pendientes. Tras confirmación, registra en STATE la inicialización pendiente y su primer paso. Usa `HITO0_PENDING:PEND-n` con ID real para cada campo sin resolver. Registra una tabla en STATE con ID, impacto `critico`/`diferible`, responsable, condición de resolución y estado `abierto`/`resuelto`. Cada marcador debe apuntar a un registro abierto exacto; retíralo al resolver. Los críticos abiertos impiden `project`; los diferibles registrados advierten. No inventes resolución ni cambies impacto para conseguir verde. Genera de forma repetible: antes de crear cada archivo, comprueba si existe y conserva personalizaciones. Procede así:
 
 1. Guarda `PRD.md` aprobado desde su plantilla, incluyendo fuente de confirmación, requisitos de entrega y exclusiones. Crea `docs/adr/0002-arquitectura-base.md` usando `docs/adr/0000-template.md`. Describe problema, alternativas relevantes, stack elegido, límites, estructura adecuada a las superficies, riesgos, consecuencias y verificación. Incluye perfil base o `custom`, variantes, componentes justificados, versiones compatibles, fuentes con fecha y responsabilidades operativas. Declara los pendientes sin resolverlos por inferencia.
 2. Actualiza `.agents/project-profile.conf` con `phase=initializing` y los campos `application_kind`, `surfaces`, `language`, `runtime`, `framework`, `persistence` y `ci_platform`. Completa además `deployment_target` y `stack_preset` como metadatos informativos del destino y perfil elegidos; estos dos campos no agregan requisitos al gate actual. Cada valor debe reflejar una decisión o indicar `not_applicable`; no guardes secretos.
@@ -116,7 +127,7 @@ Si la sesión dejó commits, antes de cerrarla: exportá la conversación del ha
 Cuando estén creados el PRD, el ADR, el perfil, la plantilla personalizada, el prompt maestro, aprendizaje, el verificador y la CI:
 
 1. Conserva `phase=initializing`, bootstrap y disparador de reanudación. Actualiza README con propósito y comandos reales; STATE indica paso pendiente, decisiones confirmadas, evidencia y contador. No repitas respuestas ni generes de nuevo archivos válidos.
-2. Ejecuta `./scripts/verify.sh` con el entorno autorizado. Si falta runtime, permisos o falla el gate, registra el bloqueo y siguiente hipótesis; conserva bootstrap activo y no declares Hito 0 completado. Una salida 0 en `initializing` verifica artefactos y comandos, pero aún requiere sellado.
+2. Ejecuta `./scripts/verify.sh` con el entorno autorizado. Si falta runtime, permisos o falla el gate, registra el bloqueo y siguiente hipótesis; conserva bootstrap activo y no declares Hito 0 completado. Una salida 0 en `initializing` verifica artefactos y comandos; revisa el reporte de omisiones y pendientes antes del sellado. Sin unidad de producto, alcance/cierre pueden estar omitidos durante Hito 0; ello no acredita ninguna unidad de Hito 1.
 3. Después del éxito, registra «sellado pendiente» en STATE. Archiva `.agents/bootstrap.md` como `.agents/bootstrap.md.done` y cambia `phase=project`. Retira el disparador de inicio de AGENTS solo al sellar; conserva una referencia a STATE para reanudar si queda pendiente. Si se interrumpe entre esos pasos, recupera bootstrap desde `.done`, vuelve a `initializing` y continúa desde el checkpoint; no reinicies la entrevista.
-4. Ejecuta de nuevo el gate tras los cambios de sellado. Con salida 0 registra «Hito 0 completado; Hito 1 preparado, pendiente de invocación». Si falla, conserva el checkpoint, restaura bootstrap activo y `initializing` y resuelve la causa. Un gate de inicialización no demuestra la entrega final del producto.
+4. Ejecuta de nuevo el gate tras los cambios de sellado. Con salida 0 y pendientes trazables sin críticos abiertos registra «Hito 0 completado; Hito 1 preparado, pendiente de invocación». Si falla, conserva el checkpoint, restaura bootstrap activo y `initializing` y resuelve la causa. Un gate de inicialización no demuestra la entrega final del producto.
 5. Informa decisiones, pendientes y comandos ejecutados. Aplica la política de commit confirmada; sin autorización no hagas commit. Entrega la instrucción: **«Lee y ejecuta PROMPT-MAESTRO.md para iniciar Hito 1; crea o retoma la goal de entrega definida allí y sigue el ciclo por unidades de AGENTS.md»**. No inicies producto hasta esa invocación.

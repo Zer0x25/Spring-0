@@ -8,6 +8,7 @@ for path in AGENTS.md README.md STATE.md .agents docs specs scripts .githooks .g
   cp -R "$REPO_ROOT/$path" "$PILOT_ROOT/$path"
 done
 cd "$PILOT_ROOT"
+grep -qx 'phase=seed' .agents/project-profile.conf
 bash scripts/verify-structure.sh >/dev/null
 cat > .agents/project-profile.conf <<'PROFILE'
 phase=initializing
@@ -47,7 +48,7 @@ ADR
 cat > PROMPT-MAESTRO.md <<'PROMPT'
 # Delegación del ensayo
 Fixture de Seed 008: seguir PRD y AGENTS, usar STATE para reanudar.
-Solo cambios temporales de CLI y tests. Sin commits ni efectos externos.
+Solo cambios temporales de CLI y tests; commits de fixtures en Git temporal, sin efectos externos.
 PROMPT
 printf '# Aprendizaje\nEnsayo en curso; evidencia al cerrar.\n' > docs/learning.md
 cp specs/templates/feature.template.md specs/templates/feature.md
@@ -78,12 +79,21 @@ sed -i '/^## Estado inicial$/,/^## Reglas de gobernanza$/{ /^## Reglas de gobern
 printf '\nHito 0 sellado; Hito 1 preparado. Siguiente: PILOT-001.\n' >> STATE.md
 ./scripts/verify.sh > seal.log
 
-cat > specs/pilot-001.md <<'SPEC'
-# PILOT-001 — saludo, Tier 2
-Autoridad: ensayo Seed 008. Fuente REQ-1. Rutas: saludo.sh, tests/saludo.sh, STATE y esta spec.
-Dado Ana, al ejecutar saludo.sh, entonces imprime Hola, Ana.
-Sin argumento imprime Hola, mundo. Verificar con tests/saludo.sh y gate raíz.
-SPEC
+# Instantiate the real shipped spec, preserving its Markdown labels/sections.
+sed -e 's/Borrador | Aprobada | Implementada | Cerrada/Aprobada/' \
+  -e 's@\[Rutas exactas o patrón acotado; incluir spec, STATE y aprendizaje si se actualizan\]@saludo.sh, tests/saludo.sh@' \
+  -e 's@\[Rutas o límites\]@ninguno@' \
+  specs/templates/feature.template.md > specs/pilot-001.md
+sed -i 's/Unidad activa: PILOT-INIT/Unidad activa: pilot-001/' STATE.md
+# A local Git base makes this rehearsal exercise scope-lock, not its no-base fallback.
+printf '*.log\n' > .gitignore
+git init --quiet
+git config user.email pilot@test
+git config user.name pilot
+git add -A
+git -c core.hooksPath=/dev/null commit --quiet -m 'fixture: initialized project'
+git update-ref refs/remotes/origin/main "$(git rev-parse HEAD)"
+sed -i "s/\[SHA completo de inicio de esta unidad\]/$(git rev-parse HEAD)/" specs/pilot-001.md
 cat > tests/saludo.sh <<'TEST'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -99,16 +109,29 @@ set -euo pipefail
 printf 'Hola, %s.\n' "${1:-mundo}"
 APP
 ./scripts/verify.sh > feature.log
-printf '\nCierre: pruebas y gate verdes; cambios temporales, sin commit.\n' >> specs/pilot-001.md
+sed -i 's/> Estado: Aprobada/> Estado: Cerrada/' specs/pilot-001.md
+printf -- '- Evidencia CA-1: verificacion=bash tests/saludo.sh; resultado=pass; artefacto=saludo.sh; sha256=%s\n' \
+  "$(sha256sum saludo.sh | cut -d ' ' -f 1)" >> specs/pilot-001.md
+./scripts/verify.sh > close-feature.log
+grep -q 'CONTROL cierre=verificado' close-feature.log
+printf '\nCierre: pruebas y gate verdes; cambios temporales, sin commits en repositorios del usuario.\n' >> specs/pilot-001.md
+grep -q 'Alcance verificado para pilot-001' feature.log
+# Finish the fixture unit before moving to the next scope.
+git add AGENTS.md STATE.md specs/pilot-001.md saludo.sh tests/saludo.sh
+git -c core.hooksPath=/dev/null commit --quiet -m 'fixture: first unit'
+# Keep origin/main unchanged: next unit must use its own start SHA.
 # A missed edge case of the original PRD creates a new lightweight record.
+sed -i 's/Unidad activa: pilot-001/Unidad activa: LIG-PILOT-001/' STATE.md
 cat >> STATE.md <<'STATE'
 
 PILOT-001 terminada: REQ-1 comprobado con tests/saludo.sh y gate raíz.
 LIG-PILOT-001 — Tier 3 — en curso
+Criterios: CA-1
 Resultado/fuente: entrada de espacios debe usar mundo; corrección confirmada por el contrato del ensayo Seed 008.
 Alcance/autoridad: saludo.sh, tests/saludo.sh, STATE; experimento temporal autorizado, sin efectos externos.
 Verificación/cierre: agregar caso de espacios, rojo/verde y gate. Siguiente: restaurar comportamiento. Contador: 0.
 STATE
+printf 'Base de alcance: %s\n' "$(git rev-parse HEAD)" >> STATE.md
 cat >> tests/saludo.sh <<'TEST'
 [[ "$(bash saludo.sh '   ')" == 'Hola, mundo.' ]] || { printf 'WHITESPACE_NAME\n' >&2; exit 1; }
 TEST
@@ -122,7 +145,13 @@ if [[ ! "$name" =~ [^[:space:]] ]]; then name=mundo; fi
 printf 'Hola, %s.\n' "$name"
 APP
 ./scripts/verify.sh > correction.log
-printf '\nLIG-PILOT-001 terminada; rojo WHITESPACE_NAME y gate verde; sin commit. Siguiente: ninguna.\n' >> STATE.md
+grep -q 'Alcance verificado para LIG-PILOT-001' correction.log
+sed -i 's/LIG-PILOT-001 — Tier 3 — en curso/LIG-PILOT-001 — Tier 3 — cerrada/' STATE.md
+printf -- '- Evidencia CA-1: verificacion=bash tests/saludo.sh; resultado=pass; artefacto=saludo.sh; sha256=%s\n' \
+  "$(sha256sum saludo.sh | cut -d ' ' -f 1)" >> STATE.md
+./scripts/verify.sh > close-correction.log
+grep -q 'CONTROL cierre=verificado' close-correction.log
+printf '\nLIG-PILOT-001 terminada; rojo WHITESPACE_NAME y gate verde; sin commits en repositorios del usuario. Siguiente: ninguna.\n' >> STATE.md
 printf '\nSeed 008: reanudar desde STATE conserva decisiones y distingue inicialización de producto; evidencia en gates y pruebas del ensayo.\n' >> docs/learning.md
 # A fresh shell verifies the persisted checkpoint and final behavior.
 bash -c 'set -euo pipefail; grep -q "LIG-PILOT-001 terminada" STATE.md; [[ -f .agents/bootstrap.md.done && ! -e .agents/bootstrap.md ]]; [[ "$(bash saludo.sh "   ")" == "Hola, mundo." ]]'

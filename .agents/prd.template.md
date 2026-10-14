@@ -2,7 +2,7 @@
 
 > Estado: Borrador | Aprobado. Registrar fecha y confirmación del usuario. Este archivo será `PRD.md`, fuente del alcance de producto; no duplicarlo en el prompt maestro.
 
-> HITO0_PENDING: retirar este marcador solo después de resolver y confirmar los campos críticos.
+> Pendientes: usa `HITO0_PENDING:PEND-n` con ID real, registrado en STATE; retira cada referencia después de resolver y confirmar el campo.
 
 ## Problema y resultado
 
@@ -31,7 +31,7 @@ Todos los requisitos de esta entrega son obligatorios; lo opcional va a «futuro
 ## Supuestos y decisiones pendientes
 
 - **Supuestos aceptados:** [Lista o ninguno]
-- **Pendientes críticos:** [Resolver antes de aceptar alcance/arquitectura]
+- **Pendientes críticos:** [Referencias HITO0_PENDING:PEND-n; registro único en STATE con impacto, responsable y resolución; críticos abiertos impiden sellado]
 - **No aplicables:** [Áreas omitidas y motivo]
 
 La arquitectura vive en ADR; autoridad e invocación en el prompt; pruebas y escenarios en specs; cobertura y progreso en STATE. Cambios al alcance o criterios requieren confirmación registrada y nuevas decisiones cuando afecten arquitectura. No alteres criterios para declarar éxito sobre una implementación diferente.

@@ -4,7 +4,7 @@
 
 ## Estado inicial
 
-Cuando el usuario pida iniciar un proyecto con `phase=seed`, lee `.agents/bootstrap.md`. Con `phase=initializing`, retoma el paso pendiente desde STATE y el bootstrap, preservando decisiones y archivos existentes; no reinicies la entrevista. Para revisar o mantener esta plantilla, no inicies la entrevista; sigue la unidad de mantenimiento aprobada según su nivel. Usa una spec salvo que la política confirmada autorice un registro ligero para una corrección Tier 3.
+Para iniciar un producto desde `phase=mold`, exporta a una carpeta nueva con `scripts/prepare-derivative.sh <destino>` y trabaja dentro del derivado; no cambies la fase del molde en sitio. Cuando el usuario pida iniciar un proyecto con `phase=seed`, lee `.agents/bootstrap.md`. Con `phase=initializing`, retoma el paso pendiente desde STATE y el bootstrap, preservando decisiones y archivos existentes; no reinicies la entrevista. Para revisar o mantener esta plantilla, no inicies la entrevista; sigue la unidad de mantenimiento aprobada según su nivel. Usa una spec salvo que la política confirmada autorice un registro ligero para una corrección Tier 3.
 
 ## Reglas de gobernanza
 
@@ -45,11 +45,13 @@ Con modalidad y autoridad confirmadas, crea antes de editar un bloque en STATE; 
 ```text
 LIG-001 — [Descripción] — Tier 3: [justificación] — [estado]
 Resultado/fuente: [problema → criterio; spec/contrato/instrucción vigente y requisito si aplica]
-Alcance/autoridad: [rutas y límites; quién, fecha y petición/delegación]
+Alcance/autoridad: [rutas separadas por comas; quién, fecha y petición/delegación]
+Base de alcance: [SHA completo de inicio]
+Criterios: CA-1
 Verificación/cierre: [verificación prevista → evidencia real, aprendizaje si útil, commit/local; siguiente paso y contador/bloqueo si existen]
 ```
 
-Al terminar, conserva el registro y su evidencia. Otro defecto usa otro ID; no sobrescribas un cierre previo. Todas las unidades mantienen límites, DoD, gate y checkpoint. La delegación puede incluir ambas modalidades por alcance y riesgo. No extiendas una autorización antigua limitada a specs; el registro ligero requiere modalidad y autoridad confirmadas.
+Al terminar, conserva el registro y su evidencia por CA según la sección 7. Otro defecto usa otro ID; no sobrescribas un cierre previo. Todas las unidades mantienen límites, DoD, gate y checkpoint. La delegación puede incluir ambas modalidades por alcance y riesgo. No extiendas una autorización antigua limitada a specs; el registro ligero requiere modalidad y autoridad confirmadas.
 
 ### 3. Límites de cambio
 
@@ -82,7 +84,15 @@ Toda entrega debe ejecutar `./scripts/verify.sh` y reportar el resultado. El com
 
 El gate raíz ejecuta integridad documental, sintaxis Bash y contrato de fases. La fase `mold` es la del propio molde gobernándose como padre: corre el contrato pero no el piloto (ensayo del ciclo de vida `seed`) ni el verificador de producto. En `seed` añade el piloto temporal. En `initializing` y `project` ejecuta además `scripts/verify-project.sh`. La fase `initializing` no declara sellado; `scripts/verify-structure.sh` es interno y no sustituye el cierre. La CI invoca el mismo gate; declara por separado si sus pruebas E2E, seguridad, build u otras verificaciones forman parte del gate completo.
 
-**Gobernanza ejecutable (Seed 009):** en `phase=project`, `scripts/verify-scope.sh` aplica dos controles mecánicos que sustituyen la regla de prompt. (1) *Scope-lock*: compara los cambios contra la base autorizada (`origin/main`, incluyendo archivos nuevos) con los «Archivos autorizados» de la unidad activa declarada en STATE; una ruta fuera de lista bloquea el commit. (2) *Evidencia*: una unidad en estado Cerrada debe tener, por criterio CA, una línea de evidencia con comando y resultado real. El gate gobierna el flujo, no la estructura: si la unidad, su sección de rutas o sus criterios no se pueden parsear, advierte y omite ese control — nunca bloquea por no entender. En `initializing` advierte sin bloquear; en `seed` y `mold` no corre (ni el molde ni una semilla tienen unidad de producto). Los ADR `0000–0006` son del molde (ejemplo/guía); los ADR del proyecto derivado usan `0002` (arquitectura) y `0007+`. La evolución del molde se gobierna en Constructor-Padre; los derivados no la tocan.
+**Gobernanza ejecutable:** en `project`, `scripts/verify-scope.sh` comprueba por separado alcance y cierre. La unidad declara `Base de alcance: <SHA completo>` en la spec o bloque LIG: registra HEAD antes de cambiar archivos, conserva esa base y no la adelantes para ocultar cambios. El gate compara cambios commiteados, staged, de trabajo y archivos nuevos contra ese ancestro; las rutas protegidas prevalecen sobre patrones editables. En derivados anteriores sin base por unidad, conserva `origin/main` como fallback y reporta gobernanza incompleta hasta migrar mediante una decisión registrada. La revisión acumulada de rama (`git diff origin/main...HEAD`) sigue siendo parte de la revisión, aparte del permiso de la unidad.
+
+Una unidad Cerrada requiere criterios CA y una declaración por criterio: `- Evidencia CA-1: verificacion=comando o revisión concreta; resultado=pass; artefacto=ruta/relativa; sha256=huella`. Calcula la huella después de verificar (`sha256sum ruta/relativa`). El separador es `;`; usa scripts para comandos que lo contengan. El gate reconoce estado con o sin negritas y verifica declaración, existencia del artefacto dentro del repo y coincidencia de contenido, incluso sin cambios o sin base Git. Esto no certifica quién ejecutó el comando ni la suficiencia de las pruebas. Las verificaciones y la revisión acordadas conservan su propia evidencia; no fabriques declaraciones para conseguir verde.
+
+Cada control informa `verificado`, `omitido` o `no_aplica`. Falta de unidad, base disponible o datos interpretables conserva la política de advertencia/omisión con exit 0, pero produce `GOVERNANCE_STATUS=incomplete`. Un resultado técnico satisfactorio con controles omitidos no acredita cierre de una unidad. Las violaciones confirmadas bloquean `project`; en `initializing` advierten y conservan recuperación. En `seed`/`mold` no hay unidad de producto. Para LIG, se lee únicamente su bloque activo; al cerrarlo añade `Criterios: CA-1` y la misma declaración de evidencia, sin spec nueva.
+
+**Pendientes trazables:** cada campo no resuelto de PRD, prompt o ADR-0002 referencia `HITO0_PENDING:PEND-1` (ID propio). STATE conserva una tabla `ID | Impacto | Responsable | Condición de resolución | Estado`, con impacto `critico`/`diferible` y estado `abierto`/`resuelto`. Todo marcador necesita un registro exacto abierto; resolverlo implica retirar las referencias vigentes. Un crítico abierto impide sellado/cierre en `project`; un diferible abierto registrado advierte. En `initializing`, registros incompletos advierten y deben corregirse antes de sellar. Los marcadores antiguos sin ID se migran explícitamente; la palabra «pendiente» no sustituye el registro. La clasificación y la resolución conservan la autoridad humana/delegada, no se deducen del gate.
+
+Los ADR `0000–0006` son del molde (ejemplo/guía); los ADR del proyecto derivado usan `0002` (arquitectura) y `0007+`. La evolución del molde se gobierna en Constructor-Padre; los derivados no la tocan.
 
 **Capacidades acumuladas del flujo:** las capacidades que el flujo fue sumando —gobernanza ejecutable (Seed 009), arranque con Notion y sus dos modos (Seed 010), aprendizaje auditable y ritual de cierre de sesión (Seed 011), preparación de capa/system design (Seed 013) y decisiones transversales por dominio (Seed 014)— están detalladas en [`docs/flujo-capacidades.md`](docs/flujo-capacidades.md). Los puntos que el protocolo necesita recordar siempre:
 
@@ -100,7 +110,7 @@ En Hito 1, al invocar `PROMPT-MAESTRO.md`, inicia o retoma la meta solicitada me
 Por cada unidad (spec o registro ligero Tier 3 autorizado):
 
 1. Clasifica, justifica y acepta según la delegación del nivel. Tier 3 usa el formato de la sección 2 si está autorizado; en otro caso, y para Tier 2/1, redacta spec, incluyendo rutas de la spec, STATE y aprendizaje y AGENTS si necesita ajustes. Define contratos y escenarios BDD Dado/Cuando/Entonces para comportamientos relevantes, incluyendo alternativas y rechazos. Vincula requisito del PRD o corrección justificada, escenario/criterio y prueba. Para cambios puramente técnicos usa verificaciones adecuadas; no exijas Cucumber ni Gherkin artificial. Las ambigüedades de negocio críticas se consultan, sin resolverlas por autoaceptación.
-2. Ejecuta contratos/pruebas, implementación y gate; corrige fallos antes del cierre. No avances como si una verificación requerida hubiera pasado cuando está pendiente.
+2. Ejecuta contratos/pruebas, implementación y gate; corrige fallos antes del cierre. No avances como si una verificación requerida hubiera pasado cuando está pendiente; revisa también los controles omitidos del reporte.
 3. Registra comandos/resultados en la spec o cierre ligero y en `docs/learning.md` una entrada breve con ID de unidad, hallazgo, evidencia y aplicación futura si existe un aprendizaje útil; si no, registra «sin hallazgos nuevos» en el cierre, sin inventarlos. En mantenimiento de semilla el aprendizaje puede quedar en la spec. No guardes secretos ni conviertas una observación en regla arquitectónica sin ADR.
 4. Actualiza STATE con cobertura de la meta, unidad actual/siguiente, pendientes, pruebas y checkpoint. En Tier 3 el mismo bloque puede servir de registro y checkpoint, sin duplicarlo. Ajusta AGENTS a comandos o estructura reales solo si está autorizado; conserva gobernanza y evita añadir el historial de sesiones.
 5. Crea el commit del alcance verificado cuando la política confirmada lo requiera y autorice, incluyendo spec si aplica y registros. Si un commit requerido falla o falta su autorización, registra cierre pendiente; si no es requerido, registra los cambios locales sin afirmar que fueron commiteados. Tras éxito informa el hash; el checkpoint puede referirse al commit de la unidad por su ID para evitar un segundo commit solo para registrar su propio hash.

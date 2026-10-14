@@ -3,8 +3,15 @@
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
-bash scripts/verify-structure.sh
+if structure_report="$(bash scripts/verify-structure.sh)"; then
+  printf '%s\n' "$structure_report"
+else
+  code=$?
+  printf '%s\n' "$structure_report"
+  exit "$code"
+fi
 for script in scripts/verify.sh scripts/verify-structure.sh scripts/install-hooks.sh \
+  scripts/prepare-derivative.sh scripts/verify-scope.sh \
   scripts/tests/verify-contract.sh scripts/tests/bootstrap-pilot.sh .githooks/pre-commit; do
   bash -n "$script"
 done
@@ -18,17 +25,22 @@ elif [[ "$PHASE" == mold ]]; then
   # (seed lifecycle rehearsal) and the product verifier do not apply.
   printf 'Gate del molde superado. No certifica una aplicación de producto.\n'
 else
-  # Mechanical scope-lock + per-criterion evidence: warns in initializing, blocks in project.
-  if [[ "$PHASE" == project ]]; then
-    bash scripts/verify-scope.sh
+  if scope_report="$(bash scripts/verify-scope.sh)"; then
+    printf '%s\n' "$scope_report"
   else
-    bash scripts/verify-scope.sh warn || true
+    code=$?
+    printf '%s\n' "$scope_report"
+    exit "$code"
   fi
   bash -n scripts/verify-project.sh
   ./scripts/verify-project.sh
   if [[ "$PHASE" == initializing ]]; then
     printf 'Verificación de inicialización superada; pendiente de sellado.\n'
   else
-    printf 'Gate del proyecto superado; comprobar también aceptación y DoD.\n'
+    if [[ "$scope_report" == *"GOVERNANCE_STATUS=incomplete"* || "$structure_report" == *"CONTROL pendientes=omitido"* ]]; then
+      printf 'Gate tecnico superado; gobernanza incompleta: revisar controles omitidos antes de cerrar.\n'
+    else
+      printf 'Gate del proyecto superado; comprobar también aceptación y DoD.\n'
+    fi
   fi
 fi

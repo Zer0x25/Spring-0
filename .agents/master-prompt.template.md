@@ -2,7 +2,7 @@
 
 > Generar como `PROMPT-MAESTRO.md` después de confirmar la entrevista. Resolver los campos críticos antes de aceptarlo; no usar esta plantilla sin personalizar.
 
-> HITO0_PENDING: retirar este marcador solo después de confirmar alcance y autoridad.
+> Pendientes de autoridad: usar `HITO0_PENDING:PEND-n` con ID registrado en STATE; resolver antes de aceptar la delegación.
 
 - **Estado:** [Aceptado por el usuario, fecha y referencia de confirmación]
 - **Arquitectura:** `docs/adr/0002-arquitectura-base.md`
@@ -32,13 +32,13 @@ Entregar la primera versión definida en `PRD.md`, cumpliendo sus requisitos y e
 
 Al pedirme «Lee y ejecuta PROMPT-MAESTRO.md para iniciar Hito 1», crea o retoma la meta con las capacidades disponibles según `docs/agent-capabilities.md`; STATE conserva objetivo y pendientes.
 
-Lee PRD, AGENTS, STATE, el perfil y los ADR aplicables. Comprueba el estado real de Git y del gate. Si la inicialización está pendiente, resuélvela antes de desarrollar producto. Descompón la meta en unidades pequeñas ordenadas por dependencias y clasifícalas antes de editar: specs para Tier 2/1, registro ligero para Tier 3 cuando esté autorizado. Vincula requisitos o correcciones justificadas, criterios y verificaciones pertinentes. Mantén una unidad activa; reanúdala antes de crear otra.
+Lee PRD, AGENTS, STATE, el perfil y los ADR aplicables. Comprueba el estado real de Git y del gate. Si la inicialización está pendiente, resuélvela antes de desarrollar producto. Descompón la meta en unidades pequeñas ordenadas por dependencias y clasifícalas antes de editar: specs para Tier 2/1, registro ligero para Tier 3 cuando esté autorizado. Vincula requisitos o correcciones justificadas, criterios y verificaciones pertinentes. Mantén una unidad activa; reanúdala antes de crear otra. Registra su SHA de inicio como Base de alcance y conserva el valor durante la unidad; revisa la rama acumulada aparte.
 
 Sigue el ciclo de AGENTS: clasificación y registro aceptado → contratos/pruebas o revisión pertinente → implementación → gate y controles DoD → aprendizaje y estado → commit cuando requerido y autorizado → checkpoint → compactación según necesidad/política → siguiente unidad. Al pasar a la siguiente unidad, si toca una capa nueva (UI/frontend, offline, dominio con superficie de usuario) sin decisión de diseño previa, aplicá el protocolo de «Preparación de la siguiente unidad / capa» de AGENTS (ADR de system design validado por el humano antes de tocar la capa). Si la unidad toca código de un dominio (endpoints, persistencia, lógica de negocio), cerrá primero en su ADR base las tres decisiones transversales obligatorias de AGENTS —modelo de errores, contexto tenant/auth, estrategia de tests—; si ya están declaradas, arrancá el ciclo normal. Genera o actualiza instrucciones de proyecto cuando cambien los comandos o estructura bajo una decisión autorizada. Consulta ADR 0002 para stack y AGENTS para niveles; no dupliques esas reglas aquí.
 
 ## Cierre de meta
 
-Antes de declarar la app completa, verifica todos los requisitos y evidencias finales del PRD y la DoD, incluidos flujos integrados y requisitos de calidad acordados. Entrega evidencia, comandos de ejecución y limitaciones reales. Con criterios, verificaciones o commits requeridos pendientes, conserva la meta abierta. No amplíes el alcance ni reduzcas los criterios para cerrar.
+Antes de declarar la app completa, verifica todos los requisitos y evidencias finales del PRD y la DoD, incluidos flujos integrados y requisitos de calidad acordados. Entrega evidencia, comandos de ejecución y limitaciones reales. Con criterios, verificaciones, controles omitidos, pendientes críticos o commits requeridos pendientes, conserva la meta abierta. Usa el formato de evidencia y pendientes de AGENTS; no confundas salida 0 con controles completos. No amplíes el alcance ni reduzcas los criterios para cerrar.
 
 ## Reanudación
 

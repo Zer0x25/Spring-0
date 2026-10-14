@@ -19,7 +19,6 @@ profile_value() {
 }
 require_content "$PROFILE_FILE"
 PHASE="$(profile_value phase)"
-PENDING_TOTAL=0
 case "$PHASE" in seed|mold) ;; initializing|project) ;; *) fail "phase desconocida '$PHASE'; usa seed, mold, initializing o project." ;; esac
 
 # Common governance and tools remain required in derived projects.
@@ -29,6 +28,7 @@ for file in AGENTS.md README.md STATE.md \
   docs/adr/0005-gobernanza-proporcional-al-riesgo.md docs/adr/0006-gobernanza-verificable.md \
   docs/agent-capabilities.md \
   scripts/verify.sh scripts/verify-structure.sh scripts/install-hooks.sh \
+  scripts/prepare-derivative.sh scripts/verify-scope.sh \
   scripts/tests/verify-contract.sh scripts/tests/bootstrap-pilot.sh .githooks/pre-commit; do
   require_content "$file"
 done
@@ -56,7 +56,7 @@ else
   done
   # Deliberately bounded: known unfilled template fields, not all Markdown brackets.
   # HITO0_PENDING is a LEGITIMATE pending marker (see profile L17 and Notion Modo A),
-  # not a critical placeholder: count it and warn by phase, never fail on it alone.
+  # not a generic placeholder: validate its ID/record and impact before sealing.
   # Other [placeholders] keep failing.
   for file in PRD.md PROMPT-MAESTRO.md docs/adr/0002-arquitectura-base.md; do
     if grep -Eq '\[Nombre del|\[Nombre de|\[Aceptado por|\[Referencia a|\[Autoaceptación|\[Quién|\[Autorización|\[Por (spec|registro|unidad)|\[Umbral|\[Lista o ninguno\]|\[Resolver|\[Problema|\[Capacidades|\[Flujo|\[Requisito|\[Prueba|\[Medición|\[Decisiones|\[Título|\[Modalidad|\[Registro ligero|\[Decisiones que|\[Chequeo rápido|\[Detalla|\[Describe|\[Punto principal|Borrador \| Aprobado|Propuesto \| Aceptado' "$file"; then
@@ -65,16 +65,50 @@ else
     pending_count="$(grep -c 'HITO0_PENDING' "$file" || true)"
     if [[ "$pending_count" -gt 0 ]]; then
       printf 'HITO0_PENDING: %s declara %s pendiente(s) sin resolver.\n' "$file" "$pending_count" >&2
-      PENDING_TOTAL=$((PENDING_TOTAL + pending_count))
     fi
   done
-  # Pending markers are data, not violations — but at sealing (project) they must
-  # stay registered in STATE so they cannot silently vanish. initializing just warns.
-  if [[ "$PHASE" == project && "$PENDING_TOTAL" -gt 0 ]]; then
-    if ! grep -qi 'HITO0_PENDING\|pendiente' STATE.md; then
-      fail 'hay HITO0_PENDING sin resolver en archivos sellados pero STATE no registra los pendientes; decláralos en STATE antes de sellar.'
-    fi
-    printf 'Pendientes registrados en STATE: %s en total (rastreados, no bloquean).\n' "$PENDING_TOTAL" >&2
+  # Match pending IDs to explicit records, never to an incidental word in STATE.
+  references="$(for file in PRD.md PROMPT-MAESTRO.md docs/adr/0002-arquitectura-base.md; do
+    while IFS= read -r marker; do printf '%s %s\n' "$file" "$marker"; done \
+      < <(grep -oE 'HITO0_PENDING(:[A-Za-z0-9_-]+)?' "$file" || :)
+  done)"
+  pending_report="$(printf '%s\n' "$references" | awk -v phase="$PHASE" '
+    function trim(v) {gsub(/^[[:space:]]+|[[:space:]]+$/, "", v); return v}
+    function issue(v) {bad=1; print "PENDING ERROR: " v}
+    FNR == NR {
+      if ($0 ~ /^[[:space:]]*\|[[:space:]]*PEND-[0-9]+[[:space:]]*\|/) {
+        n=split($0, row, "|"); id=trim(row[2]); impact=trim(row[3]); owner=trim(row[4]); condition=trim(row[5]); state=trim(row[6]);
+        if (seen[id]++) issue(id " duplicado en STATE.md.");
+        if (n != 7 || (impact != "critico" && impact != "diferible") || owner == "" || condition == "" || owner ~ /\[/ || condition ~ /\[/ || (state != "abierto" && state != "resuelto")) {
+          issue(id " tiene registro incompleto o invalido en STATE.md.")
+        } else {
+          status[id]=state; kind[id]=impact; records++;
+          if (state == "abierto" && impact == "critico") {
+            if (phase == "project") issue(id " critico abierto: impide sellado/cierre.");
+            else print "PENDING WARNING: " id " critico abierto; inicializacion pendiente.";
+          } else if (state == "abierto") print "PENDING WARNING: " id " diferible abierto y registrado.";
+        }
+      }
+      next
+    }
+    NF {
+      file=$1; marker=$2; refs++;
+      if (marker !~ /^HITO0_PENDING:PEND-[0-9]+$/) {
+        issue(file " usa marcador sin ID valido; migrar a HITO0_PENDING:PEND-n."); next
+      }
+      sub(/^HITO0_PENDING:/, "", marker);
+      if (!(marker in status)) issue(file ": " marker " no tiene registro valido en STATE.md.");
+      else if (status[marker] != "abierto") issue(file ": " marker " resuelto conserva marcador pendiente.");
+    }
+    END {
+      if (bad) print "CONTROL pendientes=omitido";
+      else if (records || refs) print "CONTROL pendientes=verificado";
+      else print "CONTROL pendientes=no_aplica";
+    }
+  ' STATE.md -)"
+  printf '%s\n' "$pending_report"
+  if [[ "$PHASE" == project && "$pending_report" == *"PENDING ERROR:"* ]]; then
+    fail "pendientes sin trazabilidad o criticos abiertos; resolver antes del sellado/cierre."
   fi
   require_content scripts/verify-project.sh
   [[ -x scripts/verify-project.sh ]] || fail 'scripts/verify-project.sh debe ser ejecutable.'

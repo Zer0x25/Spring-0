@@ -21,6 +21,8 @@ make_seed_fixture() {
   if [[ -f "$REPO_ROOT/scripts/verify-structure.sh" ]]; then
     cp "$REPO_ROOT/scripts/verify-structure.sh" "$dir/scripts/verify-structure.sh"
   fi
+  cp "$REPO_ROOT/scripts/prepare-derivative.sh" "$dir/scripts/prepare-derivative.sh"
+  cp "$REPO_ROOT/scripts/verify-scope.sh" "$dir/scripts/verify-scope.sh"
   cp "$REPO_ROOT/scripts/install-hooks.sh" "$dir/scripts/install-hooks.sh"
   cp "$REPO_ROOT/.githooks/pre-commit" "$dir/.githooks/pre-commit"
   # Stubs bound recursion; separate tests prove the root executes and propagates them.
@@ -45,6 +47,8 @@ make_project() {
 
 # A project fixture with an active unit, its spec (authorized paths) and a git base,
 # so the scope-lock and evidence controls can be exercised deterministically.
+# Fixture commits may intentionally contain invalid governance state. Isolate
+# their hooks from Git options inherited through the REAL repository's hook.
 make_scoped_project() {
   local dir="$1"
   make_project "$dir"
@@ -60,14 +64,19 @@ make_scoped_project() {
 - Protegidos: nada adicional
 ## 5. Criterios
 | CA-1 | comportamiento | tests/keep.spec.ts | verde |
-- Evidencia CA-1: `bash tests/keep.spec.ts` → 0 passed.
 SPEC
   mkdir -p "$dir/src/core" "$dir/tests"
   printf 'ok\n' > "$dir/src/core/keep.ts"
   printf '#!/usr/bin/env bash\nexit 0\n' > "$dir/tests/keep.spec.ts"
+  printf -- '- Evidencia CA-1: verificacion=bash tests/keep.spec.ts; resultado=pass; artefacto=tests/keep.spec.ts; sha256=%s\n' \
+    "$(sha256sum "$dir/tests/keep.spec.ts" | cut -d ' ' -f 1)" >> "$dir/specs/SCOPED-001.md"
   git -C "$dir" add -A >/dev/null 2>&1
-  git -C "$dir" commit --quiet -m base >/dev/null 2>&1
+  git -c core.hooksPath=/dev/null -C "$dir" commit --quiet -m base >/dev/null 2>&1
   # Local base so scope-lock can diff without a network remote (fail-safe stays for real clones).
+  git -C "$dir" update-ref refs/remotes/origin/main "$(git -C "$dir" rev-parse HEAD)"
+  printf '> Base de alcance: %s\n' "$(git -C "$dir" rev-parse HEAD)" >> "$dir/specs/SCOPED-001.md"
+  git -C "$dir" add specs/SCOPED-001.md
+  git -c core.hooksPath=/dev/null -C "$dir" commit --quiet -m 'fixture: declared unit base'
   git -C "$dir" update-ref refs/remotes/origin/main "$(git -C "$dir" rev-parse HEAD)"
 }
 
@@ -246,6 +255,7 @@ assert_gate 1 "$scoped" 'missing authorized-paths section in project blocks' 'Ar
 scoped="$TEMP_ROOT/scoped-nobase"
 make_scoped_project "$scoped"
 git -C "$scoped" update-ref -d refs/remotes/origin/main
+sed -i '/Base de alcance:/d' "$scoped/specs/SCOPED-001.md"
 printf 'cualquier cambio\n' >> "$scoped/src/core/keep.ts"
 assert_gate 0 "$scoped" 'no base omits scope-lock without blocking'
 
@@ -306,8 +316,8 @@ else FAIL_COUNT=$((FAIL_COUNT + 1)); printf 'FAIL: BDD-1 initializing+HITO0_PEND
 # BDD-2: project + HITO0_PENDING + pendientes en STATE → warns, exit 0.
 pend2="$TEMP_ROOT/pending2"
 make_project "$pend2"
-printf 'Meta con campo critico HITO0_PENDING sin resolver.\n' >> "$pend2/PRD.md"
-printf '## Pendientes criticos\n- HITO0_PENDING: resolver hosting.\n' >> "$pend2/STATE.md"
+printf 'Meta con campo diferible HITO0_PENDING:PEND-1 sin resolver.\n' >> "$pend2/PRD.md"
+printf '| PEND-1 | diferible | fixture | elegir hosting | abierto |\n' >> "$pend2/STATE.md"
 assert_gate 0 "$pend2" 'BDD-2 project+HITO0_PENDING+STATE advierte sin bloquear'
 
 # BDD-3: project + HITO0_PENDING SIN registro en STATE → fails.
@@ -337,7 +347,7 @@ make_scoped_project "$lig"
 git -C "$lig" rm -q --cached specs/SCOPED-001.md >/dev/null 2>&1
 rm -f "$lig/specs/SCOPED-001.md"
 git -C "$lig" add -A >/dev/null 2>&1
-git -C "$lig" commit --quiet -m "retirar spec base" >/dev/null 2>&1
+git -c core.hooksPath=/dev/null -C "$lig" commit --quiet -m "retirar spec base" >/dev/null 2>&1
 git -C "$lig" update-ref refs/remotes/origin/main "$(git -C "$lig" rev-parse HEAD)"
 cat >> "$lig/STATE.md" <<'ST'
 
@@ -358,7 +368,7 @@ make_scoped_project "$lig2"
 git -C "$lig2" rm -q --cached specs/SCOPED-001.md >/dev/null 2>&1
 rm -f "$lig2/specs/SCOPED-001.md"
 git -C "$lig2" add -A >/dev/null 2>&1
-git -C "$lig2" commit --quiet -m "retirar spec base" >/dev/null 2>&1
+git -c core.hooksPath=/dev/null -C "$lig2" commit --quiet -m "retirar spec base" >/dev/null 2>&1
 git -C "$lig2" update-ref refs/remotes/origin/main "$(git -C "$lig2" rev-parse HEAD)"
 cat >> "$lig2/STATE.md" <<'ST'
 
@@ -379,11 +389,149 @@ make_scoped_project "$lig3"
 git -C "$lig3" rm -q --cached specs/SCOPED-001.md >/dev/null 2>&1
 rm -f "$lig3/specs/SCOPED-001.md"
 git -C "$lig3" add -A >/dev/null 2>&1
-git -C "$lig3" commit --quiet -m "retirar spec base" >/dev/null 2>&1
+git -c core.hooksPath=/dev/null -C "$lig3" commit --quiet -m "retirar spec base" >/dev/null 2>&1
 git -C "$lig3" update-ref refs/remotes/origin/main "$(git -C "$lig3" rev-parse HEAD)"
 sed -i 's/^Unidad activa: SCOPED-001/Unidad activa: FEAT-999/' "$lig3/STATE.md"
 printf 'cambio sin alcance\n' >> "$lig3/src/core/keep.ts"
 assert_gate 1 "$lig3" 'BDD-3 unidad sin spec ni LIG sigue siendo violacion'
+
+# D-008: exercise the shipped Markdown template, not only simplified fixtures.
+real="$TEMP_ROOT/real-template"
+make_scoped_project "$real"
+sed -e 's/Borrador | Aprobada | Implementada | Cerrada/Aprobada/' \
+  -e 's@\[Rutas exactas o patrón acotado; incluir spec, STATE y aprendizaje si se actualizan\]@src/core/*@' \
+  -e 's@\[Rutas o límites\]@src/core/forbidden.ts@' \
+  "$REPO_ROOT/specs/templates/feature.template.md" > "$real/specs/SCOPED-001.md"
+printf 'allowed\n' >> "$real/src/core/keep.ts"
+assert_gate 0 "$real" 'real Markdown template allows editable paths' 'Alcance verificado'
+printf 'protected\n' > "$real/src/core/forbidden.ts"
+assert_gate 1 "$real" 'protected path overrides editable glob' 'SCOPE VIOLATION'
+sed -i 's/\*\*//g' "$real/specs/SCOPED-001.md"
+assert_gate 1 "$real" 'plain protected label never authorizes a path' 'SCOPE VIOLATION'
+rm "$real/src/core/forbidden.ts"
+sed -i 's@^- Editables: src/core/\*@- src/core/*@' "$real/specs/SCOPED-001.md"
+assert_gate 0 "$real" 'legacy direct path bullets remain supported' 'Alcance verificado'
+printf 'outside\n' > "$real/outside.txt"
+assert_gate 1 "$real" 'real template rejects outside path' 'SCOPE VIOLATION'
+
+multi="$TEMP_ROOT/multiple-lig"
+make_scoped_project "$multi"
+cat > "$multi/STATE.md" <<'ST'
+Unidad activa: LIG-002.
+LIG-001 — cerrada
+Alcance/autoridad: src/core/old.ts; fixture; 2026-10-14
+LIG-002 — en curso
+Alcance/autoridad: src/core/keep.ts; fixture; 2026-10-14
+LIG-003 — pendiente
+Alcance/autoridad: src/core/future.ts; fixture; 2026-10-14
+ST
+printf 'current\n' >> "$multi/src/core/keep.ts"
+assert_gate 0 "$multi" 'active LIG uses its own block' 'Alcance verificado'
+git -C "$multi" restore src/core/keep.ts
+printf 'old permission\n' > "$multi/src/core/old.ts"
+assert_gate 1 "$multi" 'active LIG cannot reuse historical permission' 'SCOPE VIOLATION'
+rm "$multi/src/core/old.ts"
+printf 'future permission\n' > "$multi/src/core/future.ts"
+assert_gate 1 "$multi" 'active LIG cannot use following block permission' 'SCOPE VIOLATION'
+
+# D-009: close independently of scope, using the shipped Markdown and evidence schema.
+close="$TEMP_ROOT/close-bold"
+make_scoped_project "$close"
+sed -i -e 's/> Estado:/> **Estado:**/' -e '/Evidencia CA-1/d' "$close/specs/SCOPED-001.md"
+assert_gate 1 "$close" 'bold closed status without evidence blocks' 'EVIDENCIA FALTANTE'
+printf -- '- CA-1: pendiente de revisión.\n' >> "$close/specs/SCOPED-001.md"
+assert_gate 1 "$close" 'criterion mention is not evidence' 'EVIDENCIA FALTANTE'
+git -C "$close" add -A
+git -c core.hooksPath=/dev/null -C "$close" commit --quiet -m 'fixture: invalid clean close'
+git -C "$close" update-ref refs/remotes/origin/main "$(git -C "$close" rev-parse HEAD)"
+assert_gate 1 "$close" 'clean worktree still checks closure' 'EVIDENCIA FALTANTE'
+sed -i '/Base de alcance:/d' "$close/specs/SCOPED-001.md"
+git -C "$close" update-ref -d refs/remotes/origin/main
+assert_gate 1 "$close" 'closure runs without scope base' 'EVIDENCIA FALTANTE'
+
+close="$TEMP_ROOT/close-explicit"
+make_scoped_project "$close"
+assert_gate 0 "$close" 'explicit closure evidence passes' 'CONTROL cierre=verificado'
+printf 'changed artifact\n' >> "$close/tests/keep.spec.ts"
+assert_gate 1 "$close" 'changed tested artifact invalidates evidence' 'EVIDENCIA FALTANTE'
+
+for key in verificacion resultado artefacto sha256; do
+  close="$TEMP_ROOT/close-missing-$key"
+  make_scoped_project "$close"
+  sed -i -E "s/$key=[^;]*;?//" "$close/specs/SCOPED-001.md"
+  assert_gate 1 "$close" "closure requires explicit $key" 'EVIDENCIA FALTANTE'
+done
+close="$TEMP_ROOT/close-failed-result"
+make_scoped_project "$close"
+sed -i 's/resultado=pass/resultado=fail/' "$close/specs/SCOPED-001.md"
+assert_gate 1 "$close" 'failed result cannot close a criterion' 'EVIDENCIA FALTANTE'
+
+omit="$TEMP_ROOT/omit-unit"
+make_scoped_project "$omit"
+printf 'Sin unidad declarada.\n' > "$omit/STATE.md"
+printf 'outside\n' > "$omit/outside.txt"
+assert_gate 0 "$omit" 'missing unit reports incomplete governance' 'GOVERNANCE_STATUS=incomplete'
+assert_gate 0 "$omit" 'root describes incomplete governance instead of successful closure' 'gobernanza incompleta'
+omit="$TEMP_ROOT/omit-base"
+make_scoped_project "$omit"
+sed -i '/Base de alcance:/d' "$omit/specs/SCOPED-001.md"
+git -C "$omit" update-ref -d refs/remotes/origin/main
+assert_gate 0 "$omit" 'missing base reports incomplete without hiding closure' 'CONTROL cierre=verificado'
+
+seq="$TEMP_ROOT/sequential-units"
+make_scoped_project "$seq"
+printf 'unit A\n' >> "$seq/src/core/keep.ts"
+git -C "$seq" add -A
+git -c core.hooksPath=/dev/null -C "$seq" commit --quiet -m 'fixture: finished unit A'
+base_b="$(git -C "$seq" rev-parse HEAD)"
+printf 'Unidad activa: SEQ-002.\n' > "$seq/STATE.md"
+cat > "$seq/specs/SEQ-002.md" <<SPEC
+> Estado: Aprobada
+> Base de alcance: $base_b
+## 4. Archivos autorizados
+- Editables: src/core/second.ts
+SPEC
+printf 'unit B\n' > "$seq/src/core/second.ts"
+assert_gate 0 "$seq" 'next unit ignores committed work of previous unit' 'Alcance verificado'
+printf 'unauthorized B change\n' >> "$seq/src/core/keep.ts"
+assert_gate 1 "$seq" 'unit base still rejects unauthorized paths' 'SCOPE VIOLATION'
+git -C "$seq" restore src/core/keep.ts
+sed -i 's/^> Base de alcance:.*/> Base de alcance: deadbeef/' "$seq/specs/SEQ-002.md"
+assert_gate 1 "$seq" 'invalid explicit base blocks' 'SCOPE VIOLATION'
+orphan="$(git -C "$seq" commit-tree "$(git -C "$seq" rev-parse HEAD^{tree})" -m 'fixture unrelated base')"
+sed -i "s/^> Base de alcance:.*/> Base de alcance: $orphan/" "$seq/specs/SEQ-002.md"
+assert_gate 1 "$seq" 'explicit base must be an ancestor of HEAD' 'SCOPE VIOLATION'
+
+stage="$TEMP_ROOT/staged-only"
+make_scoped_project "$stage"
+printf 'staged outside\n' > "$stage/outside.txt"
+git -C "$stage" add outside.txt
+rm "$stage/outside.txt"
+assert_gate 1 "$stage" 'staged path invisible in worktree still blocks' 'SCOPE VIOLATION'
+
+pending="$TEMP_ROOT/pending-trace"
+make_project "$pending"
+printf 'Field HITO0_PENDING:PEND-1\n' >> "$pending/PRD.md"
+printf 'Sin pendientes.\n' > "$pending/STATE.md"
+assert_gate 1 "$pending" 'word pendiente cannot substitute a pending record' 'PEND-1'
+printf '| PEND-2 | diferible | fixture | decide hosting | abierto |\n' > "$pending/STATE.md"
+assert_gate 1 "$pending" 'different pending ID cannot satisfy reference' 'PEND-1'
+printf '| PEND-1 | critico | fixture | decide permissions | abierto |\n' > "$pending/STATE.md"
+assert_gate 1 "$pending" 'critical pending blocks sealing' 'PEND-1'
+sed -i 's/phase=project/phase=initializing/' "$pending/.agents/project-profile.conf"
+assert_gate 0 "$pending" 'critical pending allows recovery in initializing' 'PEND-1'
+sed -i 's/phase=initializing/phase=project/' "$pending/.agents/project-profile.conf"
+printf '| PEND-1 | diferible | fixture | decide hosting | abierto |\n' > "$pending/STATE.md"
+assert_gate 0 "$pending" 'tracked deferrable pending passes' 'PEND-1'
+printf '| PEND-1 | diferible | fixture | decide hosting | resuelto |\n' > "$pending/STATE.md"
+assert_gate 1 "$pending" 'resolved pending cannot retain unresolved marker' 'PEND-1'
+
+printf '| PEND-1 | diferible | fixture | choose hosting | abierto |\n| PEND-1 | diferible | other | other condition | abierto |\n' > "$pending/STATE.md"
+assert_gate 1 "$pending" 'duplicate pending ID blocks ambiguous trace' 'duplicado'
+printf '| PEND-1 | diferible | | choose hosting | abierto |\n' > "$pending/STATE.md"
+assert_gate 1 "$pending" 'pending requires a responsible party' 'incompleto'
+printf '| PEND-1 | diferible | fixture | | abierto |\n' > "$pending/STATE.md"
+assert_gate 1 "$pending" 'pending requires a resolution condition' 'incompleto'
 
 hook_repo="$TEMP_ROOT/hooks"
 mkdir -p "$hook_repo/scripts" "$hook_repo/.githooks"

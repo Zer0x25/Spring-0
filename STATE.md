@@ -6,7 +6,30 @@
 - Base del molde: specs históricas conservadas en el Constructor-Padre (unidades de construcción del molde); este repo expone solo el molde a derivados.
 - Historia conservada: [Seeds 001–007](docs/history/seed-001-007.md). Sus permisos de publicación no se reutilizan para esta unidad.
 
-## Última unidad — Seed 016 (V5.6) — Índice canónico de ADR + limpieza de base
+## Entrega de D-008/D-009 (2026-10-14)
+
+- Usuario autorizó «commit and push» de los cambios acumulados; la autoridad de publicación se registra separada de los criterios técnicos ya cerrados.
+- El commit de entrega incluye este checkpoint; su SHA se obtiene del historial Git, sin crear un commit adicional para registrar su propio hash.
+- Verificación de entrega: contrato 139/139 y distribución con exportación, recuperación, sellado y cierre de spec/LIG. CI y hashes remotos se comprueban tras el push.
+- Siguiente mejora propuesta: piloto real de un derivado con entrevista y autoridad confirmada; después revisar aceptación/revisión y reglas de arquitectura por perfil. No hay unidad de producto activa.
+
+## Construcción vigente — D-009 (2026-10-14)
+
+- Autoridad: usuario «hazlo» en Constructor-Padre; criterios, alcance y cambio de política registrados en D-009.
+- Resultado: cierre con evidencia explícita/huella antes de diff; base por unidad; controles omitidos visibles; pendientes por ID con críticos bloqueantes y diferibles registrados.
+- Verificación: `../scripts/verify-distribution.sh` exit 0; contrato 139/139 en molde y semilla; piloto con recuperación, cierre de spec/LIG y dos unidades sin actualizar origin/main verde.
+- Estado: D-009 cerrada localmente; cambios sin commit/push, sin unidad de producto activa. Contador 0, sin bloqueo.
+- Siguiente paso: nueva unidad cuando se solicite; adopción en derivados anteriores requiere migración explícita, detallada en D-009 del padre. CI remota no ejecutada.
+
+## Construcción previa — D-008 (2026-10-14)
+
+- Autoridad: usuario «hazlo» en Constructor-Padre; alcance y criterios registrados en D-008.
+- Resultado: exportación segura a `seed` con procedencia y STATE limpio; alcance compatible con la plantilla real, protegidos prevalentes y selección del LIG activo.
+- Verificación: `../scripts/verify-distribution.sh` exit 0; contrato 111/111 y piloto con plantilla real/base Git temporal, dos recuperaciones y alcance confirmado en Tier 2/Tier 3. Exportación segura/repetición/limpieza verificadas.
+- Estado: D-008 cerrada localmente, cambios sin commit/push; no hay unidad de producto activa. Contador 0, sin bloqueo.
+- Siguiente paso: nueva unidad de construcción cuando se solicite; CI remota no ejecutada. Evidencia y límites en D-008 del padre.
+
+## Antecedente histórico — Seed 016 (V5.6) — Índice canónico de ADR + limpieza de base
 
 - Meta: componer la base de ADR sin contradicciones ni frases muertas. Índice canónico de precedencia/numeración + corrección quirúrgica de ADR 0000 + limpieza de frases muertas en 0003/0004/0005.
 - Unidad de construcción: Seed 016 (V5.6), Tier 1; autoridad del usuario «hazlo», 2026-10-12. Spec conservada en el Constructor-Padre.
